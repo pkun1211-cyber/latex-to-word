@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+# 运行产物：自检结果、安装清单
+scripts/_smoke_result.json
+install_ttf_map.json
+
+# 中间产物与备份（绞不入库）
+tmp/
+*.tmp
+bak_*.docx
+bak_before_*.docx
+GOOD_*.docx
+
+# 转换链中间文件
+pre.tex
+pandoc_raw.docx
+reference_base.docx
+reference_custom.docx
+*.pdf
+!docs/**/*.pdf
+
+# 项目专属配置（含本机绝对路径，不应入库）
+l2w.json
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
