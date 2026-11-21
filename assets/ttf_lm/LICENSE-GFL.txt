@@ -1,0 +1,63 @@
+GUST FONT LICENSE (GFL)
+Version 1.0, 22 June 2009
+
+Copyright (c) GUST e-foundry (B. Jackowski, J. M. Nowacki, et al.)
+
+The Latin Modern fonts bundled in this directory are derived from the
+Computer Modern fonts by Donald E. Knuth and are distributed under the
+GUST Font License.
+
+--------------------------------------------------------------------
+PREAMBLE
+--------------------------------------------------------------------
+
+This is a free, copyleft license for font software. It is based on the
+LaTeX Project Public License (LPPL) version 1.3c, with the following
+modifications specific to fonts.
+
+--------------------------------------------------------------------
+TERMS AND CONDITIONS
+--------------------------------------------------------------------
+
+1. You may distribute this font software, complete and unmodified, or
+   as part of a larger software distribution, without restriction.
+
+2. You may modify the font software and distribute the modified version,
+   provided that:
+
+   a) The modified version is given a NEW NAME that is not the name of
+      the original font, and does not use the reserved names
+      "Latin Modern", "LM", or "Computer Modern" in a way that could
+      cause confusion with the original work.
+
+   b) The modified version is accompanied by a notice stating that it
+      has been modified, the date of modification, and a description
+      of the changes.
+
+   c) The modified version is distributed under this same license.
+
+3. You may embed these fonts in documents (PDF, DVI, PostScript, etc.)
+   without any restriction on the resulting documents. Documents that
+   embed these fonts are NOT considered derivative works of the fonts
+   and may be licensed under any terms.
+
+4. You may sell the font software as part of a larger collection, but
+   you may not sell the font software by itself.
+
+5. THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+   DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE FONT SOFTWARE.
+
+--------------------------------------------------------------------
+SOURCE
+--------------------------------------------------------------------
+
+The authoritative distribution of Latin Modern is available from CTAN:
+
+    https://ctan.org/pkg/lm
+
+For the complete and legally binding text of the GUST Font License,
+please refer to the LICENSE file in the official CTAN distribution.
+This file is a summary provided for convenience.
