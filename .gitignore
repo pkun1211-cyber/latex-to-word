@@ -4,11 +4,12 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+
 # 运行产物：自检结果、安装清单
 scripts/_smoke_result.json
 install_ttf_map.json
 
-# 中间产物与备份（绞不入库）
+# 中间产物与备份（绝不入库）
 tmp/
 *.tmp
 bak_*.docx

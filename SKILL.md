@@ -309,4 +309,3 @@ L2W_CONF=/path/to/l2w.json python _smoke.py   # 期望 33/33 + SHA256 一致
 **新增脚本的硬规范**：模块级只允许 import、常量、纯函数定义。
 不得实例化 `Document`、不得持有可变全局状态、不得建目录、
 不得在顶层调用 `C.require_docx()`（放 main 内，见坑 34）。
-
