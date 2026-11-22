@@ -44,8 +44,11 @@ Python: C:\Users\<user>\.workbuddy\binaries\python\envs\default\Scripts\python.e
         （PATH 上的 python 是基础解释器，没装 python-docx/pymupdf，会静默降级）
 依赖:   python-docx  lxml  pymupdf  fontTools  pywin32
 外部:   pandoc（转换）、本机 Microsoft Word（COM 导出 PDF）
-字体:   用 fetch_fonts.py 自动获取（本机 MiKTeX 优先，否则从 CTAN 镜像下载）
-        → 转 TTF → 修 name 表 → 用户级安装。详见第 0 步。
+        pandoc 不必在 PATH：run_chain.py 会自动回退到 pypandoc 内置版本
+        （只装了 pypandoc-binary 的机器也能跑，见第 2 步）
+字体:   本机 assets/ttf_lm/ 已含 13 个 LM Roman TTF，可直接 install_ttf.py；
+        新克隆的仓库不含字体二进制，用 fetch_fonts.py 自动获取
+        （本机 MiKTeX 优先，否则从 CTAN 镜像下载）→ 转 TTF → 修 name 表 → 安装
 ```
 
 ## 配置：所有脚本统一读 l2wconf
@@ -95,6 +98,15 @@ $PY $S/run_chain.py check                     # 只验收
 设 `S=<skill>/scripts`，`PY=<托管python>`，`T=<tmp目录>`。
 
 ### 第 0 步：装字体（一次性）
+
+**情况 A：assets/ttf_lm/ 已有 TTF**（本机技能目录就是这种）
+
+```bash
+$PY $S/install_ttf.py          # 用户级安装，写 HKCU，不动系统目录
+$PY $S/audit_lmfont.py         # 校验 Word 能否识别
+```
+
+**情况 B：没有字体二进制**（从 GitHub 新克隆——仓库不含 TTF，只有许可与下载脚本）
 
 ```bash
 $PY $S/fetch_fonts.py --install   # 获取 + 转 TTF + 修 name + 用户级安装（写 HKCU）
@@ -157,6 +169,16 @@ pandoc $T/pre.tex -o $T/pandoc_raw.docx \
 `build_reference.py` 按第 1 步记录的参数钉死 Normal/Heading/Title/Caption 等样式。
 **必须基于 Pandoc 官方 reference.docx 改**，不能自己新建空 docx——
 Pandoc 依赖里面一整套样式 ID（`Compact`/`FirstParagraph`/`TableCaption`…）。
+
+**pandoc 找不到怎么办**：`run_chain.py pre` 内置探测顺序为
+PATH → pypandoc 内置 → 常见安装目录，所以只装 `pypandoc-binary` 也能跑：
+
+```bash
+$PY -m pip install pypandoc-binary   # 自带 pandoc，不必改 PATH
+```
+
+手工敲上面两条 pandoc 命令时若报「不是内部或外部命令」，
+把 `pandoc` 换成 `$PY -c "import pypandoc;print(pypandoc.get_pandoc_path())"` 输出的路径。
 
 ### 第 4 步：OOXML 后处理
 
@@ -255,7 +277,7 @@ $PY $S/cmp_pages.py tex final           # 分歧块定位 + 字号分布
 
 ## 排错
 
-先查 `references/pitfalls.md`（35 条实测坑）。高频：
+先查 `references/pitfalls.md`（36 条实测坑）。高频：
 
 | 症状 | 原因 | 查 |
 |---|---|---|
@@ -282,9 +304,9 @@ latex-to-word/
 │   ├── l2wconf.py         路径配置（所有脚本都读它）
 │   ├── docxio.py          安全写盘（关 Word 占用 + 原子替换 + 备份）
 │   ├── _smoke.py          自检：import 全脚本 + SHA256 校验文件未被改动
-│   └── ...                33 个功能脚本
+│   └── ...                34 个功能脚本
 ├── references/
-│   └── pitfalls.md        35 条实测坑与量化数据
+│   └── pitfalls.md        36 条实测坑与量化数据
 └── assets/
     ├── ttf_lm/            13 个 LM Roman TTF（2.8MB）
     └── l2w.example.json   配置样例
@@ -296,10 +318,10 @@ latex-to-word/
 
 ```bash
 # ① 技能目录内，无任何配置 —— 验证可加载性
-cd <skill>/scripts && python _smoke.py        # 期望 33/33
+cd <skill>/scripts && python _smoke.py        # 期望 34/34
 
 # ② 指向真实项目 —— 验证功能且零副作用
-L2W_CONF=/path/to/l2w.json python _smoke.py   # 期望 33/33 + SHA256 一致
+L2W_CONF=/path/to/l2w.json python _smoke.py   # 期望 34/34 + SHA256 一致
 ```
 
 只跑 ② 会漏掉「脱离项目目录就不可用」的缺陷（坑 34）；

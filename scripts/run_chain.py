@@ -37,6 +37,41 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
 
+def pandoc_bin():
+    """定位 pandoc 可执行文件。
+
+    顺序：PATH → pypandoc 内置（pip 装 pypandoc-binary 时自带）→ 常见安装目录。
+    只在真正要用时调用，**不在模块顶层执行**（见坑 32/34：顶层副作用）。
+
+    为什么需要：很多机器只装了 pypandoc 而没有独立 pandoc，
+    PATH 里没有 pandoc.exe，直接 subprocess.run(['pandoc',...]) 会
+    FileNotFoundError，pre 阶段整条链中止。
+    """
+    p = shutil.which('pandoc')
+    if p:
+        return p
+    try:
+        import pypandoc
+        p = pypandoc.get_pandoc_path()
+        if p and os.path.exists(p):
+            return p
+        if p and os.path.exists(p + '.exe'):
+            return p + '.exe'
+    except Exception:
+        pass
+    for c in (os.path.expandvars(r'%LOCALAPPDATA%\Pandoc\pandoc.exe'),
+              r'C:\Program Files\Pandoc\pandoc.exe',
+              r'C:\Program Files (x86)\Pandoc\pandoc.exe',
+              os.path.expandvars(r'%LOCALAPPDATA%\Programs\Pandoc\pandoc.exe')):
+        if os.path.exists(c):
+            return c
+    raise SystemExit(
+        'pandoc 不可用。任选一种安装方式：\n'
+        '  1) pip install pypandoc-binary   （自带 pandoc，无需改 PATH，推荐）\n'
+        '  2) 官网装 pandoc 并确保加入 PATH\n'
+        '已检查：PATH、pypandoc 内置路径、常见安装目录。')
+
+
 def sh(script, *args, check=True):
     cmd = [PY, os.path.join(HERE, script)] + [str(a) for a in args]
     print('\n$ %s %s' % (script, ' '.join(str(a) for a in args)))
@@ -67,17 +102,21 @@ def stage_pre():
     if not C.TEX or not os.path.exists(C.TEX):
         raise SystemExit('未配置 tex 源文件。')
     sh('preprocess1120.py')
+    pd = pandoc_bin()
+    print('使用 pandoc:', pd)
     base = C.tmp('reference_base.docx')
     if not os.path.exists(base):
         print('\n$ pandoc --print-default-data-file reference.docx')
-        r = subprocess.run(['pandoc', '--print-default-data-file', 'reference.docx'],
+        r = subprocess.run([pd, '--print-default-data-file', 'reference.docx'],
                            capture_output=True)
         if r.returncode != 0:
-            raise SystemExit('pandoc 不可用，请先安装 pandoc。')
+            raise SystemExit('pandoc 取默认模板失败: '
+                             + (r.stderr or b'').decode('utf-8', 'replace')[-400:])
+        C.ensure_tmp()
         open(base, 'wb').write(r.stdout)
     sh('build_reference.py')
     raw = C.tmp('pandoc_raw.docx')
-    cmd = ['pandoc', C.tmp('pre.tex'), '-o', raw,
+    cmd = [pd, C.tmp('pre.tex'), '-o', raw,
            '--reference-doc=' + C.tmp('reference_custom.docx'),
            '--from=latex', '--to=docx']
     print('\n$ ' + ' '.join(cmd))

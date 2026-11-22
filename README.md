@@ -2,7 +2,7 @@
 
 > 把中文 LaTeX 论文高保真转换为 Word，并**逐行对齐 LaTeX 编译出的 PDF 版面**。
 
-一条经过真实论文打磨的转换链：**38 个脚本 + 35 条实测坑清单 + 字体自动获取**。
+一条经过真实论文打磨的转换链：**38 个脚本 + 36 条实测坑清单 + 字体自动获取**。
 不是「跑个 Pandoc 就完事」，而是把 Pandoc 直出稿与 LaTeX PDF 之间的每一处版面差异
 逐项量化、逐项修正，直到页数相同、断行位置逐行锁定。
 
@@ -123,7 +123,7 @@ Word docx  ─┘        （导出 PDF 实测，反馈修正）
 | 操作系统 | **Windows** | 闭环校正依赖 Word COM 导出 PDF |
 | Microsoft Word | 本机安装 | 用于 `ExportAsFixedFormat` 导出 PDF 做实测 |
 | Python | 3.10+ | 需能 `pip install` |
-| Pandoc | 2.x+ | 承担 tex → docx 的实际转换 |
+| Pandoc | 2.x+ | 承担 tex → docx 的实际转换；**不必在 PATH**，见下 |
 | LaTeX | 已编译出 PDF | **PDF 是唯一的对齐基准** |
 | 字体 | Latin Modern Roman | 用 `fetch_fonts.py` 自动获取，见下 |
 
@@ -131,7 +131,11 @@ Python 依赖：
 
 ```bash
 pip install python-docx lxml pymupdf fontTools pywin32
+pip install pypandoc-binary        # 自带 pandoc，省去单独安装与配 PATH
 ```
+
+`run_chain.py` 定位 pandoc 的顺序是 **PATH → pypandoc 内置 → 常见安装目录**，
+所以只装 `pypandoc-binary` 的机器开箱可用（坑 36）。
 
 > **macOS / Linux**：转换链本身（A/B 档）可跑，但**闭环校正不可用**——
 > 没有 Word COM 就无法导出 PDF 实测，C 档的逐行校准做不了。
@@ -269,6 +273,17 @@ pandoc tmp/pre.tex -o tmp/pandoc_raw.docx \
 **必须基于 Pandoc 官方 `reference.docx` 改**，不能自己新建空 docx——
 Pandoc 依赖里面一整套样式 ID（`Compact` / `FirstParagraph` / `TableCaption`…），
 少了就会静默丢格式。
+
+**pandoc 不在 PATH 也能跑**：`run_chain.py pre` 的探测顺序是
+PATH → pypandoc 内置 → 常见安装目录。只装 `pypandoc-binary` 的机器无需配 PATH：
+
+```bash
+pip install pypandoc-binary   # 自带 pandoc 3.x
+```
+
+手工执行上面两条命令时若报「pandoc 不是内部或外部命令」，把 `pandoc`
+替换为 `python -c "import pypandoc;print(pypandoc.get_pandoc_path())"` 的输出路径。
+（坑 36）
 
 ### 第 4 步：OOXML 后处理
 
@@ -447,7 +462,7 @@ PDF 里 `MUÑOZ` 可能渲染成 `MUÑ` + `OZ` 两个 span，
 
 ## 工程纪律
 
-项目踩过的坑已整理成 **`references/pitfalls.md`（35 条）**，每条都带实测数据。
+项目踩过的坑已整理成 **`references/pitfalls.md`（36 条）**，每条都带实测数据。
 其中三条是血泪教训，值得单独强调：
 
 ### 纪律一：脚本模块级不得有副作用

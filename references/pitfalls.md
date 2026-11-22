@@ -1,7 +1,7 @@
-# LaTeX → Word 实测坑清单（33 条）
+# LaTeX → Word 实测坑清单（36 条）
 
 全部来自一篇 12 页中文 ctexart 论文的真实转换过程，含量化数据。
-按「转换期 → 版面期 → 硬对齐期 → 度量期」分组。
+按「转换期 → 版面期 → 硬对齐期 → 度量期 → 工程期」分组。
 
 ---
 
@@ -220,7 +220,7 @@ PDF 只用来**实测边界间隙**，或在兜底脚本里用
 
 ---
 
-## 五、工程期（32~33）★ 会损坏用户文件
+## 五、工程期（32~36）★ 会损坏用户文件 / 阻断可用性
 
 ### 32. ★★ 脚本主逻辑写在模块顶层 → `import` 即写盘，静默损坏成品
 `refine_layout` / `fix_fontsize` / `fix_justify` / `fix_settings` /
@@ -292,6 +292,36 @@ def tmp(*parts):         # 纯路径拼接，零副作用
 **通用判据**：配置模块的顶层只允许「读环境变量 / 算路径 / 定义函数」。
 任何 `makedirs`、`open(...,'w')`、`Document(...)`、网络请求都必须延迟。
 自检除了比 SHA256，还要 `ls -a` 看技能目录有没有多出文件。
+
+### 36. 硬写 `['pandoc', ...]` 让只装 pypandoc 的机器整链中止
+`run_chain.py` 的 pre 阶段原来直接 `subprocess.run(['pandoc', ...])`。
+但很多机器**只有 pypandoc-binary，没有独立 pandoc**——pandoc.exe 藏在
+`site-packages/pypandoc/files/` 里，PATH 上没有。
+结果 `FileNotFoundError`，pre 阶段中止，用户以为"环境装错了"。
+
+实测本机就是这种：PATH、注册表卸载项、常见安装目录全都没有 pandoc，
+但 `pypandoc.get_pandoc_path()` 能拿到 3.9 版，功能完全正常。
+
+→ 加探测函数，**在用到时才调**（顶层调用会违反坑 32/34）：
+```python
+def pandoc_bin():
+    p = shutil.which('pandoc')
+    if p: return p
+    try:
+        import pypandoc
+        p = pypandoc.get_pandoc_path()
+        if p and os.path.exists(p): return p
+        if p and os.path.exists(p + '.exe'): return p + '.exe'
+    except Exception:
+        pass
+    # …常见安装目录兜底…
+    raise SystemExit('pandoc 不可用。推荐 pip install pypandoc-binary')
+```
+注意 `get_pandoc_path()` 在 Windows 上可能返回**不带 .exe 后缀**的路径，
+必须补一次 `.exe` 存在性判断，否则 `os.path.exists` 为假而误判不可用。
+
+**通用判据**：调用任何外部可执行文件前都要探测，不能假定它在 PATH 上。
+报错信息要给出可执行的补救命令，而不是只说"请先安装"。
 
 ---
 
